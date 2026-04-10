@@ -1,66 +1,22 @@
-﻿# -*- coding: utf-8 -*-
-"""
-八字/六爻 API 路由
-"""
+# -*- coding: utf-8 -*-
 from fastapi import APIRouter, HTTPException
-from backend.models.models import BaziQuery, BaziResponse, GuaQuery, GuaData
-from backend.services.engine import bazi_pan, time_gua, build_llm_prompt
-
+from pydantic import BaseModel, Field
+from typing import Optional
 router = APIRouter(prefix="/api/bazi", tags=["八字排盘"])
 
+class Q(BaseModel):
+    name: Optional[str] = ""
+    gender: str = "M"
+    birth_year: int = Field(..., ge=1900, le=2030)
+    birth_month: int = Field(..., ge=1, le=12)
+    birth_day: int = Field(..., ge=1, le=31)
+    birth_hour: int = Field(..., ge=0, le=23)
 
-@router.post("/pan", response_model=BaziResponse)
-def api_bazi_pan(query: BaziQuery):
-    """
-    八字排盘接口
-    输入：出生年月日时分
-    返回：四柱、五行、十神、格局、大运、流年、六爻
-    """
+@router.post("/pan")
+def pan(q: Q):
     try:
-        result = bazi_pan(
-            year=query.year,
-            month=query.month,
-            day=query.day,
-            hour=query.hour,
-            gender=query.gender or "男",
-            location=query.location or "北京",
-        )
-        return BaziResponse(code=200, msg="success", data=result)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.post("/gua", response_model=dict)
-def api_time_gua(query: GuaQuery):
-    """
-    六爻梅花易数起卦
-    时间法起卦，返回卦名、动爻、变卦、卦象分析
-    """
-    try:
-        result = time_gua(
-            year=query.year,
-            month=query.month,
-            day=query.day,
-            hour=query.hour,
-            gender=query.gender or "男",
-        )
-        return {"code": 200, "msg": "success", "data": result}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/prompt/demo")
-def api_demo_prompt():
-    """返回示例 Prompt，供前端预览"""
-    try:
-        demo_result = bazi_pan(1990, 5, 15, 10, "男", "北京")
-        sys_p, usr_p = build_llm_prompt(demo_result, "事业发展方向")
-        return {
-            "code": 200,
-            "data": {
-                "system": sys_p,
-                "user": usr_p
-            }
-        }
+        from backend.services.engine import bazi_pan
+        r = bazi_pan(q.name, q.gender, q.birth_year, q.birth_month, q.birth_day, q.birth_hour)
+        return {"code": 200, "msg": "success", "data": r}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
