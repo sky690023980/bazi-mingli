@@ -8,7 +8,7 @@ from config import HOST, PORT
 app = FastAPI(title="八字命理LLM系统", version="1.0.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
-from backend.routes import bazi, llm, user, extended
+from routes import bazi, llm, user, extended
 app.include_router(bazi.router)
 app.include_router(llm.router)
 app.include_router(user.router)
