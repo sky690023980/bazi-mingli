@@ -16,5 +16,5 @@ class MarriagePlugin(BaziPlugin):
         return "姻缘配偶星分析"
 
     def analyze(self, pillar_data: Dict[str, Any]) -> Dict[str, Any]:
-        from backend.services.engine import marriage_analysis
+        from engine import marriage_analysis
         return marriage_analysis(pillar_data)
