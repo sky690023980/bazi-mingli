@@ -11,7 +11,7 @@ class Q(BaseModel):
 @router.post("/interpret")
 async def interpret(q: Q):
     try:
-        from backend.services.llm_service import interpret_bazi
+        from services.llm_service import interpret_bazi
         result = await interpret_bazi(q.pillar_json, q.style)
         return {"code": 200, "msg": "success", "data": {"interpretation": result}}
     except Exception as e:
