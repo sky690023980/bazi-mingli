@@ -31,7 +31,7 @@ def api_qimen_pan(query: QimenQuery):
     返回：九宫格布局、八门、八神、九星、旬空、马星、整体解读
     """
     try:
-        from backend.services.engine import qimen_pan
+        from engine import qimen_pan
         result = qimen_pan(
             year=query.year,
             month=query.month,
