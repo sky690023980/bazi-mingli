@@ -15,7 +15,7 @@ class Q(BaseModel):
 @router.post("/pan")
 def pan(q: Q):
     try:
-        from backend.services.engine import bazi_pan
+        from engine import bazi_pan
         r = bazi_pan(q.name, q.gender, q.birth_year, q.birth_month, q.birth_day, q.birth_hour)
         return {"code": 200, "msg": "success", "data": r}
     except Exception as e:
