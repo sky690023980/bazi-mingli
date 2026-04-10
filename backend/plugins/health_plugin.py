@@ -16,5 +16,5 @@ class HealthPlugin(BaziPlugin):
         return "基于五行体质分析健康运势"
 
     def analyze(self, pillar_data: Dict[str, Any]) -> Dict[str, Any]:
-        from backend.services.engine import health_analysis
+        from engine import health_analysis
         return health_analysis(pillar_data)
