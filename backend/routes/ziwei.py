@@ -32,7 +32,7 @@ def api_ziwei_pan(query: ZiweiQuery):
     返回：14颗主星位置、12宫位、五行局、星曜组合分析
     """
     try:
-        from backend.services.engine import ziwei_pan
+        from engine import ziwei_pan
         result = ziwei_pan(
             year=query.year,
             month=query.month,
