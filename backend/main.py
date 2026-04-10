@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 import sys, os, pathlib
+# Railway deploys files to /app, add it to path so modules can find each other
+_DEPLOY_ROOT = pathlib.Path("/app")
+if _DEPLOY_ROOT.exists():
+    sys.path.insert(0, "/app")
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
