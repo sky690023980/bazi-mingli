@@ -19,7 +19,7 @@ class LQ(BaseModel):
 @router.post("/health")
 def health(q: HQ):
     try:
-        from backend.services.engine import health_analysis
+        from engine import health_analysis
         return {"code": 200, "msg": "success", "data": health_analysis(q.pillar_json)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -27,7 +27,7 @@ def health(q: HQ):
 @router.post("/marriage")
 def marriage(q: MQ):
     try:
-        from backend.services.engine import marriage_analysis
+        from engine import marriage_analysis
         return {"code": 200, "msg": "success", "data": marriage_analysis(q.pillar_json)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -35,7 +35,7 @@ def marriage(q: MQ):
 @router.post("/liunian")
 def liunian(q: LQ):
     try:
-        from backend.services.engine import liunian_detail
+        from engine import liunian_detail
         yr = q.target_year or datetime.datetime.now().year
         return {"code": 200, "msg": "success", "data": liunian_detail(q.birth_year, q.day_zhu, yr)}
     except Exception as e:
