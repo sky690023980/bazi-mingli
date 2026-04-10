@@ -1,45 +1,11 @@
 # -*- coding: utf-8 -*-
-"""
-配置文件
-"""
-from pathlib import Path
-from pydantic_settings import BaseSettings
-from functools import lru_cache
-
-BASE_DIR = Path(__file__).parent.parent
-DATA_DIR = BASE_DIR.parent / "bazi_engine" / "data"
-
-class Settings(BaseSettings):
-    # 数据库
-    db_path: Path = BASE_DIR / "bazi_data.db"
-
-    # LLM — Ollama 本地
-    ollama_base_url: str = "http://localhost:11434"
-    ollama_model: str = "qwen2.5:14b"
-    llm_temperature: float = 0.3
-    llm_max_tokens: int = 800
-
-    # LLM — OpenAI 兼容接口（可选）
-    openai_api_key: str = ""
-    openai_base_url: str = ""
-    openai_model: str = "gpt-4o-mini"
-
-    # LLM Provider 选择
-    llm_provider: str = "ollama"  # "ollama" | "openai" | "qwen"
-
-    # Qwen API（阿里云 DashScope）
-    qwen_api_key: str = ""
-    qwen_model: str = "qwen-plus"
-
-    # 服务器
-    host: str = "0.0.0.0"
-    port: int = 8000
-    debug: bool = False
-
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-
-@lru_cache
-def get_settings() -> Settings:
-    return Settings()
+import os
+LLM_PROVIDER = os.getenv('llm_provider', 'groq').lower()
+GROQ_API_KEY = os.getenv('groq_api_key', '')
+GROQ_MODEL = os.getenv('groq_model', 'llama-3.3-70b-versatile')
+OPENAI_API_KEY = os.getenv('openai_api_key', '')
+OPENAI_BASE_URL = os.getenv('openai_base_url', 'https://api.openai.com/v1')
+OPENAI_MODEL = os.getenv('openai_model', 'gpt-4o-mini')
+HOST = os.getenv('host', '0.0.0.0')
+PORT = int(os.getenv('port', '8001'))
+DEBUG = os.getenv('debug', 'false').lower() == 'true'
