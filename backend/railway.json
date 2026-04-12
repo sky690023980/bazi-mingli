@@ -11,6 +11,9 @@
     "healthCheckPath": "/api/health",
     "sleep": {
       "enabled": false
+    },
+    "environmentVariables": {
+      "PORT": "8001"
     }
   }
 }
