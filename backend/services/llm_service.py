@@ -1,46 +1,23 @@
 # -*- coding: utf-8 -*-
-import httpx
+import openai
 import json
 from typing import Dict, Any, Optional, List
-import os
+from config import LLM_PROVIDER, GROQ_API_KEY, GROQ_MODEL
 
 GROQ_URL = "https://api.groq.com/openai/v1"
 
-def get_config():
-    """鑾峰彇閰嶇疆"""
-    llm_provider = os.getenv('llm_provider', 'groq').lower()
-    groq_api_key = os.getenv('groq_api_key', '')
-    groq_model = os.getenv('groq_model', 'llama-3.3-70b-versatile')
-    openai_api_key = os.getenv('openai_api_key', '')
-    openai_base_url = os.getenv('openai_base_url', 'https://api.openai.com/v1')
-    openai_model = os.getenv('openai_model', 'gpt-4o-mini')
-    return {
-        'llm_provider': llm_provider,
-        'groq_api_key': groq_api_key,
-        'groq_model': groq_model,
-        'openai_api_key': openai_api_key,
-        'openai_base_url': openai_base_url,
-        'openai_model': openai_model,
-    }
+def get_client():
+    """获取 LLM 客户端"""
+    if LLM_PROVIDER == "groq":
+        return openai.OpenAI(api_key=GROQ_API_KEY, base_url=GROQ_URL), GROQ_MODEL
+    else:
+        from config import OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_MODEL
+        return openai.OpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_BASE_URL), OPENAI_MODEL
 
 async def call_llm(messages, model=None, temperature=0.7) -> str:
-    """璋冪敤 LLM API"""
-    import openai
-    config = get_config()
-    
-    if config['llm_provider'] == 'groq':
-        client = openai.OpenAI(
-            api_key=config['groq_api_key'],
-            base_url=GROQ_URL
-        )
-        model = model or config['groq_model']
-    else:
-        client = openai.OpenAI(
-            api_key=config['openai_api_key'],
-            base_url=config['openai_base_url']
-        )
-        model = model or config['openai_model']
-    
+    """调用 LLM API"""
+    client, default_model = get_client()
+    model = model or default_model
     try:
         resp = client.chat.completions.create(
             model=model,
@@ -49,45 +26,49 @@ async def call_llm(messages, model=None, temperature=0.7) -> str:
         )
         return resp.choices[0].message.content
     except Exception as e:
-        return f"LLM 璋冪敤澶辫触: {str(e)}"
+        return f"LLM 调用失败: {str(e)}"
 
 async def interpret_bazi(pillar_data: Dict, style: str = "professional") -> str:
-    """瑙ｈ鍏瓧鍛界洏"""
+    """解读八字命盘"""
     p = pillar_data
     pillars = p.get("pillar", {})
     wx = p.get("wuxing", {})
     ss = p.get("shishen", {})
-    name = p.get("name", "瀹㈡埛")
-    gender = "鐢? if p.get("gender", "M") in ["M", "鐢?, "male"] else "濂?
+    name = p.get("name", "客户")
+    gender = "男" if p.get("gender", "M") in ["M", "男", "male"] else "女"
     birth_info = p.get("birth_info", "")
     
-    # 鏋勫缓绯荤粺鎻愮ず
-    system_prompt = """浣犳槸涓€浣嶄笓涓氱殑涓浗浼犵粺鍛界悊甯堬紝绮鹃€氬叓瀛楀懡鐞嗐€佷簲琛岀敓鍏嬨€佸崄绁炲叧绯汇€?璇锋牴鎹鎴锋彁渚涚殑鍏瓧淇℃伅杩涜涓撲笟瑙ｈ锛岃姹傦細
-1. 鍒嗘瀽鏃ヤ富寮哄急
-2. 瑙ｈ鍗佺鍚箟
-3. 鍒嗘瀽浜旇鍠滃繉
-4. 鎻愪緵浜嬩笟銆佽储杩愩€佸濮汇€佸仴搴锋柟闈㈢殑寤鸿
-椋庢牸瑕佷笓涓氫絾涓嶆櫐娑╋紝閫氫織鏄撴噦銆?""
+    # 构建系统提示
+    system_prompt = """你是一位专业的中国传统命理师，精通八字命理、五行生克、十神关系。
+请根据客户提供的八字信息进行专业解读，要求：
+1. 分析日主强弱
+2. 解读十神含义
+3. 分析五行喜忌
+4. 提供事业、财运、婚姻、健康方面的建议
+风格要专业但不晦涩，通俗易懂。"""
 
-    # 鏋勫缓鐢ㄦ埛鎻愮ず
-    user_prompt = f"""璇蜂负浠ヤ笅鍛戒富杩涜鍏瓧瑙ｈ锛?
-濮撳悕锛歿name}
-鎬у埆锛歿gender}
-鍑虹敓锛歿birth_info}
+    # 构建用户提示
+    user_prompt = f"""请为以下命主进行八字解读：
 
-鍥涙煴鍏瓧锛?- 骞存煴锛歿pillars.get('year', '')}
-- 鏈堟煴锛歿pillars.get('month', '')}
-- 鏃ユ煴锛歿pillars.get('day', '')}
-- 鏃舵煴锛歿pillars.get('hour', '')}
+姓名：{name}
+性别：{gender}
+出生：{birth_info}
 
-鍗佺锛?- 骞存煴锛歿ss.get('骞?, '')}
-- 鏈堟煴锛歿ss.get('鏈?, '')}
-- 鏃ユ煴锛歿ss.get('鏃?, '')}锛堟棩涓伙級
-- 鏃舵煴锛歿ss.get('鏃?, '')}
+四柱八字：
+- 年柱：{pillars.get('year', '')}
+- 月柱：{pillars.get('month', '')}
+- 日柱：{pillars.get('day', '')}
+- 时柱：{pillars.get('hour', '')}
 
-浜旇鍒嗗竷锛歿json.dumps(wx, ensure_ascii=False)}
+十神：
+- 年柱：{ss.get('年', '')}
+- 月柱：{ss.get('月', '')}
+- 日柱：{ss.get('日', '')}（日主）
+- 时柱：{ss.get('时', '')}
 
-璇蜂粠鎬ф牸銆佷簨涓氥€佽储杩愩€佸濮汇€佸仴搴蜂簲涓柟闈㈣繘琛岃缁嗚В璇汇€?""
+五行分布：{json.dumps(wx, ensure_ascii=False)}
+
+请从性格、事业、财运、婚姻、健康五个方面进行详细解读。"""
 
     messages = [
         {"role": "system", "content": system_prompt},
