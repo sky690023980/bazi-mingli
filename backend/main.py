@@ -29,15 +29,20 @@ def root():
 
 
 
-@app.get("/api/debug")
-def debug():
-    import os as _os, httpx as _httpx, json as _json
-    # Check ALL env vars containing GROQ/API/KEY
-    relevant = {k: v for k, v in _os.environ.items() 
-                if any(x in k.upper() for x in ["GROQ", "API", "KEY", "LLM"])}
-    groq_val = _os.environ.get("GROQ_API_KEY", "")
-    return {"env_groq_key": repr(groq_val), "relevant_envs": relevant,
-            "env_groq_key_len": len(groq_val), "env_groq_key_bytes": list(bytes(groq_val, "utf-8"))}
+
+@app.get("/api/groq-test")
+def groq_test():
+    import os as _os, httpx as _httpx
+    key = _os.environ.get("GROQ_API_KEY", "")
+    if not key:
+        return {"error": "no-key-found"}
+    try:
+        headers = {"Authorization": "Bearer " + key}
+        r = _httpx.get("https://api.groq.com/openai/v1/models", headers=headers, timeout=10.0)
+        return {"ok": True, "status": r.status_code, "key_prefix": key[:6]}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
 
 if __name__ == "__main__":
     import uvicorn
