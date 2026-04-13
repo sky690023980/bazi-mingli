@@ -30,20 +30,6 @@ def root():
 
 
 
-@app.get("/api/groq-test")
-def groq_test():
-    import os as _os, httpx as _httpx
-    key = _os.environ.get("GROQ_API_KEY", "")
-    if not key:
-        return {"error": "no-key-found"}
-    try:
-        headers = {"Authorization": "Bearer " + key}
-        r = _httpx.get("https://api.groq.com/openai/v1/models", headers=headers, timeout=10.0)
-        return {"ok": True, "status": r.status_code, "key_prefix": key[:6]}
-    except Exception as e:
-        return {"ok": False, "error": str(e)}
-
-
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host=HOST, port=PORT)
